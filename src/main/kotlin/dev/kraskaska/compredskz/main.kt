@@ -209,7 +209,7 @@ suspend fun main() {
                         }
                     ),
                 ),
-                button = InlineQueryResultsButton.invoke("Добавьте своё предсказание!", ""),
+                button = InlineQueryResultsButton.invoke("Добавьте своё предсказание!", "s"),
                 cachedTime = 0
             )
         }
