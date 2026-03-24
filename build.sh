@@ -1,4 +1,4 @@
 #!/bin/bash
 pushd $(dirname $0)
-git pull && && docker compose up -d --no-recreate --build
+git pull && ./gradlew shadowJar && docker compose up -d --no-recreate --build
 popd
