@@ -15,10 +15,11 @@ import dev.inmo.tgbotapi.extensions.utils.extensions.raw.reply_to_message
 import dev.inmo.tgbotapi.extensions.utils.extensions.raw.text
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.dataButton
 import dev.inmo.tgbotapi.extensions.utils.types.buttons.inlineKeyboard
-import dev.inmo.tgbotapi.extensions.utils.types.buttons.urlButton
+import dev.inmo.tgbotapi.requests.answers.InlineQueryResultsButton
 import dev.inmo.tgbotapi.types.InlineQueries.InlineQueryResult.InlineQueryResultArticle
 import dev.inmo.tgbotapi.types.InlineQueries.InputMessageContent.InputTextMessageContent
 import dev.inmo.tgbotapi.types.InlineQueryId
+import dev.inmo.tgbotapi.types.buttons.KeyboardButtonStyle
 import dev.inmo.tgbotapi.types.message.textsources.BotCommandTextSource
 import dev.inmo.tgbotapi.types.message.textsources.mentionTextSource
 import dev.inmo.tgbotapi.types.message.textsources.regularTextSource
@@ -193,17 +194,22 @@ suspend fun main() {
                         ),
                         replyMarkup = inlineKeyboard {
                             row {
-                                dataButton("+1", "upvote:$randomPredictionId"); dataButton(
+                                dataButton(
+                                    "+1",
+                                    "upvote:$randomPredictionId",
+                                    style = KeyboardButtonStyle.Success
+                                ); dataButton(
                                 "-1",
-                                "downvote:$randomPredictionId"
+                                "downvote:$randomPredictionId", style = KeyboardButtonStyle.Danger
                             )
                             }
-                            row {
-                                urlButton("Добавьте своё предсказание!", "tg://user?id=${bot.getMe().id.chatId.long}")
-                            }
+//                            row {
+//                                urlButton("Добавьте своё предсказание!", "tg://user?id=${bot.getMe().id.chatId.long}")
+//                            }
                         }
                     ),
                 ),
+                button = InlineQueryResultsButton.invoke("Добавьте своё предсказание!", ""),
                 cachedTime = 0
             )
         }

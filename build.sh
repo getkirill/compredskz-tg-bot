@@ -1,4 +1,4 @@
 #!/bin/bash
 pushd $(dirname $0)
-git pull && && docker compose up -d --no-recreate
+git pull && && docker compose up -d --no-recreate --build
 popd
