@@ -5,10 +5,7 @@ import dev.inmo.tgbotapi.extensions.api.answers.answer
 import dev.inmo.tgbotapi.extensions.api.bot.getMe
 import dev.inmo.tgbotapi.extensions.api.send.reply
 import dev.inmo.tgbotapi.extensions.behaviour_builder.buildBehaviourWithLongPolling
-import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onAnyInlineQuery
-import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onCommand
-import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onContentMessage
-import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onDataCallbackQuery
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.*
 import dev.inmo.tgbotapi.extensions.utils.extensions.raw.from
 import dev.inmo.tgbotapi.extensions.utils.extensions.raw.message
 import dev.inmo.tgbotapi.extensions.utils.extensions.raw.reply_to_message
@@ -19,14 +16,29 @@ import dev.inmo.tgbotapi.requests.answers.InlineQueryResultsButton
 import dev.inmo.tgbotapi.types.InlineQueries.InlineQueryResult.InlineQueryResultArticle
 import dev.inmo.tgbotapi.types.InlineQueries.InputMessageContent.InputTextMessageContent
 import dev.inmo.tgbotapi.types.InlineQueryId
-import dev.inmo.tgbotapi.types.buttons.KeyboardButtonStyle
 import dev.inmo.tgbotapi.types.message.textsources.BotCommandTextSource
+import dev.inmo.tgbotapi.types.message.textsources.linkTextSource
 import dev.inmo.tgbotapi.types.message.textsources.mentionTextSource
 import dev.inmo.tgbotapi.types.message.textsources.regularTextSource
 import dev.inmo.tgbotapi.utils.row
 import java.sql.DriverManager
+import kotlin.random.Random
 
 data class Prediction(val id: Int, val author: Long, val prediction: String, val voteScore: Int)
+
+val updootLinks = mutableListOf<Pair<String, Pair<Int, Boolean>>>()
+fun genUpdootLink(to: Int, vote: Boolean): String {
+    if (updootLinks.size > 50) {
+        updootLinks.removeAt(0)
+    }
+    val s = Random.nextBytes(4).toHexString(HexFormat.Default)
+    updootLinks.add(s to (to to vote))
+    return s
+}
+
+fun findUpdootLink(l: String): Pair<Int, Boolean>? {
+    return updootLinks.firstOrNull { it.first == l }?.second
+}
 
 suspend fun main() {
     val postgres = DriverManager.getConnection(System.getenv("POSTGRES_URL"))
@@ -39,6 +51,40 @@ suspend fun main() {
                 it,
                 "Привет! Я собираю предсказания и случайно выбираю их!\n\nУпомянуйте ${bot.getMe().username} чтобы получить предсказание!\nОтправьте сообщение чтобы добавить предсказание!"
             )
+        }
+        onDeepLink { deepLink ->
+            val deep = deepLink.second
+            if(deep == "s") {
+                reply(
+                    deepLink.first,
+                    "Привет! Я собираю предсказания и случайно выбираю их!\n\nУпомянуйте ${bot.getMe().username} чтобы получить предсказание!\nОтправьте сообщение чтобы добавить предсказание!"
+                )
+                return@onDeepLink
+            } else {
+                val link = findUpdootLink(deep)
+                if(link == null) {
+                    reply(
+                        deepLink.first,
+                        "Ссылка недействительна."
+                    )
+                    return@onDeepLink
+                }
+                postgres.prepareStatement(
+                    "INSERT INTO votes (user_id, prediction_id, vote)\n" +
+                            "VALUES (?, ?, ?)\n" +
+                            "ON CONFLICT (user_id, prediction_id) DO UPDATE SET vote = ?;"
+                ).use {
+                    it.setLong(1, deepLink.first.from!!.id.chatId.long)
+                    it.setInt(2, link.first)
+                    it.setBoolean(3, link.second)
+                    it.setBoolean(4, link.second)
+                    it.execute()
+                }
+                reply(
+                    deepLink.first,
+                    "Оценка ${if(link.second) "+1" else "-1"} к ${link.first} записана."
+                )
+            }
         }
         onCommand("deleteprediction", requireOnlyCommandInMessage = false) { message ->
 //            println(message.content.textSources.firstOrNull { it !is BotCommandTextSource }?.asText)
@@ -195,24 +241,29 @@ suspend fun main() {
                                 regularTextSource("Предсказание для "),
                                 mentionTextSource(it.from),
                                 regularTextSource(":\n\n"),
-                                regularTextSource(randomPrediction)
+                                regularTextSource(randomPrediction),
+                                regularTextSource(" ("),
+                                linkTextSource("+1", "https://t.me/${bot.getMe().username!!.withoutAt}?start=${genUpdootLink(randomPredictionId, true)}"),
+                                regularTextSource(" /"),
+                                linkTextSource("-1", "https://t.me/${bot.getMe().username!!.withoutAt}?start=${genUpdootLink(randomPredictionId, false)}"),
+                                regularTextSource(")"),
                             ),
                         ),
-                        replyMarkup = inlineKeyboard {
-                            row {
-                                dataButton(
-                                    "+1",
-                                    "upvote:$randomPredictionId",
-                                    style = KeyboardButtonStyle.Success
-                                ); dataButton(
-                                "-1",
-                                "downvote:$randomPredictionId", style = KeyboardButtonStyle.Danger
-                            )
-                            }
+//                        replyMarkup = inlineKeyboard {
 //                            row {
-//                                urlButton("Добавьте своё предсказание!", "tg://user?id=${bot.getMe().id.chatId.long}")
+//                                dataButton(
+//                                    "+1",
+//                                    "upvote:$randomPredictionId",
+//                                    style = KeyboardButtonStyle.Success
+//                                ); dataButton(
+//                                "-1",
+//                                "downvote:$randomPredictionId", style = KeyboardButtonStyle.Danger
+//                            )
 //                            }
-                        }
+////                            row {
+////                                urlButton("Добавьте своё предсказание!", "tg://user?id=${bot.getMe().id.chatId.long}")
+////                            }
+//                        }
                     ),
                 ),
                 button = InlineQueryResultsButton.invoke("Добавьте своё предсказание!", "s"),
