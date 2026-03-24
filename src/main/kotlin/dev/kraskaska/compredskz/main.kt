@@ -29,7 +29,7 @@ data class Prediction(val id: Int, val author: Long, val prediction: String, val
 
 val updootLinks = mutableListOf<Pair<String, Pair<Int, Boolean>>>()
 fun genUpdootLink(to: Int, vote: Boolean): String {
-    if (updootLinks.size > 50) {
+    if (updootLinks.size > 200) {
         updootLinks.removeAt(0)
     }
     val s = Random.nextBytes(4).toHexString(HexFormat.Default)
@@ -171,42 +171,42 @@ suspend fun main() {
             reply(it.message!!, "Добавлено предсказание $newId: $predText")
             answer(it, "Добавлено предсказание $newId: $predText")
         }
-        val upvoteRegex = Regex("""upvote:(?<id>.+)""")
-        onDataCallbackQuery(upvoteRegex) { dataCallbackQuery ->
-            val predId = upvoteRegex.matchEntire(dataCallbackQuery.data)?.groups?.get("id")?.value?.toIntOrNull()
-            if (predId == null) {
-                answer(dataCallbackQuery, "Что-то пошло не так.")
-                return@onDataCallbackQuery
-            }
-            postgres.prepareStatement(
-                "INSERT INTO votes (user_id, prediction_id, vote)\n" +
-                        "VALUES (?, ?, true)\n" +
-                        "ON CONFLICT (user_id, prediction_id) DO UPDATE SET vote = true;"
-            ).use {
-                it.setLong(1, dataCallbackQuery.from.id.chatId.long)
-                it.setInt(2, predId)
-                it.execute()
-            }
-            answer(dataCallbackQuery, "+1 к предсказанию $predId")
-        }
-        val downvoteRegex = Regex("""downvote:(?<id>.+)""")
-        onDataCallbackQuery(downvoteRegex) { dataCallbackQuery ->
-            val predId = downvoteRegex.matchEntire(dataCallbackQuery.data)?.groups?.get("id")?.value?.toIntOrNull()
-            if (predId == null) {
-                answer(dataCallbackQuery, "Что-то пошло не так.")
-                return@onDataCallbackQuery
-            }
-            postgres.prepareStatement(
-                "INSERT INTO votes (user_id, prediction_id, vote)\n" +
-                        "VALUES (?, ?, false)\n" +
-                        "ON CONFLICT (user_id, prediction_id) DO UPDATE SET vote = false;"
-            ).use {
-                it.setLong(1, dataCallbackQuery.from.id.chatId.long)
-                it.setInt(2, predId)
-                it.execute()
-            }
-            answer(dataCallbackQuery, "-1 к предсказанию $predId")
-        }
+//        val upvoteRegex = Regex("""upvote:(?<id>.+)""")
+//        onDataCallbackQuery(upvoteRegex) { dataCallbackQuery ->
+//            val predId = upvoteRegex.matchEntire(dataCallbackQuery.data)?.groups?.get("id")?.value?.toIntOrNull()
+//            if (predId == null) {
+//                answer(dataCallbackQuery, "Что-то пошло не так.")
+//                return@onDataCallbackQuery
+//            }
+//            postgres.prepareStatement(
+//                "INSERT INTO votes (user_id, prediction_id, vote)\n" +
+//                        "VALUES (?, ?, true)\n" +
+//                        "ON CONFLICT (user_id, prediction_id) DO UPDATE SET vote = true;"
+//            ).use {
+//                it.setLong(1, dataCallbackQuery.from.id.chatId.long)
+//                it.setInt(2, predId)
+//                it.execute()
+//            }
+//            answer(dataCallbackQuery, "+1 к предсказанию $predId")
+//        }
+//        val downvoteRegex = Regex("""downvote:(?<id>.+)""")
+//        onDataCallbackQuery(downvoteRegex) { dataCallbackQuery ->
+//            val predId = downvoteRegex.matchEntire(dataCallbackQuery.data)?.groups?.get("id")?.value?.toIntOrNull()
+//            if (predId == null) {
+//                answer(dataCallbackQuery, "Что-то пошло не так.")
+//                return@onDataCallbackQuery
+//            }
+//            postgres.prepareStatement(
+//                "INSERT INTO votes (user_id, prediction_id, vote)\n" +
+//                        "VALUES (?, ?, false)\n" +
+//                        "ON CONFLICT (user_id, prediction_id) DO UPDATE SET vote = false;"
+//            ).use {
+//                it.setLong(1, dataCallbackQuery.from.id.chatId.long)
+//                it.setInt(2, predId)
+//                it.execute()
+//            }
+//            answer(dataCallbackQuery, "-1 к предсказанию $predId")
+//        }
         onAnyInlineQuery {
             val randomPrediction: String
             val randomPredictionId: Int
