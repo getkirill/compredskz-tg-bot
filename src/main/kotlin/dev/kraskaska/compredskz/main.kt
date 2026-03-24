@@ -186,7 +186,7 @@ suspend fun main() {
                         "Получить предсказание",
                         InputTextMessageContent(
                             listOf(
-                                regularTextSource("Предсказание для"),
+                                regularTextSource("Предсказание для "),
                                 mentionTextSource(it.from),
                                 regularTextSource(":\n\n"),
                                 regularTextSource(randomPrediction)
