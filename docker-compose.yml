@@ -1,0 +1,27 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:18
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: compredskz
+      POSTGRES_PASSWORD: compredskz
+      POSTGRES_DB: compredskz
+    volumes:
+      - pgdata:/var/lib/postgresql
+#      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql
+
+  app:
+    pull_policy: "never"
+    image: compredskz:latest
+    build: .
+    restart: unless-stopped
+    depends_on:
+      - db
+    environment:
+      POSTGRES_URL: jdbc:postgresql://db:5432/compredskz?user=compredskz&password=compredskz
+      TG_TOKEN: ${TG_TOKEN}
+
+volumes:
+  pgdata:
