@@ -172,7 +172,10 @@ suspend fun main() {
                         "    FROM votes\n" +
                         "    GROUP BY prediction_id\n" +
                         ") v ON p.id = v.prediction_id\n" +
-                        "ORDER BY RANDOM() * LN(1 + GREATEST(0.1, COALESCE(v.score, 0) + 1)) DESC\n" +
+                        "ORDER BY -LN(RANDOM()) / GREATEST(\n" +
+                        "    LN(ABS(COALESCE(v.score, 0)) + 2),\n" +
+                        "    0.0001\n" +
+                        ") DESC\n" +
                         "LIMIT 1;"
             ).use {
                 it.executeQuery().use {
