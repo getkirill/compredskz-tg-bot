@@ -16,6 +16,7 @@ import dev.inmo.tgbotapi.requests.answers.InlineQueryResultsButton
 import dev.inmo.tgbotapi.types.InlineQueries.InlineQueryResult.InlineQueryResultArticle
 import dev.inmo.tgbotapi.types.InlineQueries.InputMessageContent.InputTextMessageContent
 import dev.inmo.tgbotapi.types.InlineQueryId
+import dev.inmo.tgbotapi.types.LinkPreviewOptions
 import dev.inmo.tgbotapi.types.message.textsources.BotCommandTextSource
 import dev.inmo.tgbotapi.types.message.textsources.linkTextSource
 import dev.inmo.tgbotapi.types.message.textsources.mentionTextSource
@@ -244,10 +245,11 @@ suspend fun main() {
                                 regularTextSource(randomPrediction),
                                 regularTextSource(" ("),
                                 linkTextSource("+1", "https://t.me/${bot.getMe().username!!.withoutAt}?start=${genUpdootLink(randomPredictionId, true)}"),
-                                regularTextSource(" /"),
+                                regularTextSource(" / "),
                                 linkTextSource("-1", "https://t.me/${bot.getMe().username!!.withoutAt}?start=${genUpdootLink(randomPredictionId, false)}"),
                                 regularTextSource(")"),
                             ),
+                            linkPreviewOptions = LinkPreviewOptions.Disabled
                         ),
 //                        replyMarkup = inlineKeyboard {
 //                            row {
