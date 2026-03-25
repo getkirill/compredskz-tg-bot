@@ -219,7 +219,7 @@ suspend fun main() {
                         "    FROM votes\n" +
                         "    GROUP BY prediction_id\n" +
                         ") v ON p.id = v.prediction_id\n" +
-                        "WHERE score > MIN(score) + RANDOM() * (MAX(score) - MIN(score)) \n" +
+                        "HAVING score > MIN(score) + RANDOM() * (MAX(score) - MIN(score)) \n" +
                         "ORDER BY RANDOM() DESC\n" +
                         "LIMIT 1;"
             ).use {
